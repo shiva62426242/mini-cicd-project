@@ -6,8 +6,8 @@ def test_home():
     response = client.get("/")
 
     assert response.status_code == 200
-    assert response.data == b"Hello from Mini CI/CD Project!"
-
+#    assert response.data == b"Hello from Mini CI/CD Project!"
+    assert response.data == b"Hello from Wrong Message!"
 
 def test_health():
     client = app.test_client()
