@@ -73,4 +73,9 @@ jobs:
             "$DEPLOY_USER@$DEPLOY_HOST" \
             "cd /opt/mini-cicd-project && \
              source venv/bin/activate && \
-             pip install -r requirements.txt"
+             pip install -r requirements.txt && \
+             systemctl restart mini-cicd"
+
+          ssh -i ~/.ssh/deploy_key \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "curl -f http://localhost:5000/health"
