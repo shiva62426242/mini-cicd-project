@@ -78,4 +78,12 @@ jobs:
 
           ssh -i ~/.ssh/deploy_key \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            "curl -f http://localhost:5000/health"
+            "for i in {1..10}; do \
+               if curl -fs http://localhost:5000/health; then \
+                 exit 0; \
+               fi; \
+               echo 'Application not ready yet...'; \
+               sleep 2; \
+             done; \
+             echo 'Application failed health check'; \
+             exit 1"
