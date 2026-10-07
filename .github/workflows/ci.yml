@@ -1,4 +1,4 @@
-name: Mini CI Pipeline
+name: Mini CI/CD Pipeline
 
 on:
   push:
@@ -10,9 +10,13 @@ on:
       - main
 
 jobs:
+
   test:
+    name: CI - Build and Test
     runs-on: ubuntu-latest
+
     steps:
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -29,3 +33,44 @@ jobs:
 
       - name: Run tests
         run: pytest
+
+
+  deploy:
+    name: CD - Deploy Application
+    needs: test
+    runs-on: self-hosted
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy application
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          echo "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/deploy_key \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "mkdir -p /opt/mini-cicd-project"
+
+          scp -i ~/.ssh/deploy_key \
+            app.py \
+            requirements.txt \
+            "$DEPLOY_USER@$DEPLOY_HOST:/opt/mini-cicd-project/"
+
+          ssh -i ~/.ssh/deploy_key \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd /opt/mini-cicd-project && \
+             source venv/bin/activate && \
+             pip install -r requirements.txt"
